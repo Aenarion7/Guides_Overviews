@@ -1,0 +1,96 @@
+Prerequisites
+    1. GCP Create Compute Engine Instance with Ubuntu
+    2. Create appropriate Firewall Rule:
+        a. Assign Network Tag to the Compute Engine Instance
+        b. Create Firewall Rule from GUI or GCP Console, similiar to that one below:
+            gcloud compute firewall-rules create allow-nginx-traffic \
+            --direction=INGRESS \
+            --priority=1000 \
+            --network=default \
+            --action=ALLOW \
+            --rules=tcp:80,tcp:443 \
+            --target-tags= created-tag \
+            --source-ranges=0.0.0.0/0 \
+            --description="Allow HTTP and HTTPS traffic to instances with tag allow-nginx"
+    3. Log in to Ubuntu
+
+LAB - Network Types
+# BRIDGE (Default)
+    ip address show                                             #see your network interfacess
+    sudo apt update                                             #Lets install docker
+    sudo apt install docker.io -y       
+    ip address show                                             #see your new docker0 network interface
+    sudo docker network ls                                      #list current docker networks. See Driver equals to network type
+    sudo docker run -itd --rm --name Harry busybox              #--itd to make it interactable and detached, --rm to remove itself after, --name is name of a contener. busybox is very light linux image, great for conteners
+    sudo docker run -itd --rm --name Hermiona busybox
+    sudo docker run -itd --rm --name Ron nginx
+    sudo docker ps                                              #check if conteiners are up
+    ip add show                                                 #see your network now
+    bridge link                                                 #see docker names and that they are connected to docker0
+                                                                #Docker runs its own DHCP, thats why conteiners have them own IP-s
+    sudo docker inspect bridge                                  #see containers and theirs coresponding IP-s in that same docker0 network. Conteneirs can talk to each other.  
+    #CHECK CONECTIVITY
+        sudo docker exec -it Harry sh                           #enter the cointainer, sh means shell
+        ping www.wp.pl                      
+        ping <other_conteiner>
+        iproute                                                 #check default route. There is NAT, thats why this works
+         exit  
+    #EXPOSE A STATIC WEBSITE FROM NGINX TO THE WEB
+        sudo docker stop Ron
+        sudo docker run -itd --rm -p 80:80 --name Ron nginx     #port 80 of host mapping to docker port 80
+
+# BRIDGE (User Defined)
+    sudo docker network create Hogwart                          #create new network. Bridge user created
+    sudo docker network ls                                      #see new network
+    sudo docker run -itd --rm --network Hogwart --name Hagrid busybox       #run new container in user created Bridge
+    sudo docker run -itd --rm --network Hogwart --name Lucjus busybox       
+    ip address show                                             #check setup
+    bridge link
+    sudo docker inspect Hogwart                                 #see IP for Hagrid and Lucjus
+    #CHECK CONECTIVITY betweean Lucjus and Hagrid in User Created Network
+        sudo docker exec -it Hagrid sh
+        ping Lucjus
+        exit
+# HOST
+    sudo docker stop Ron
+    sudo docker run -itd --rm --network host --name Ron nginx
+
+# MACVLAN
+    sudo docker network create -d macvlan --subnet 10.202.0.0/24  --gateway 10.202.0.1 -o parent=ens4 Durmstrang     #-d means driver which = network. Also we need to specyfie subnet we put it in to and lastly we tie our macvlan to host network interface
+    sudo docker network ls                                              #see new network and its type
+    sudo docker stop Hagrid Lucjus
+    sudo docker run -itd --rm --network Durmstrang --ip 10.202.0.30 --name Hagrid busybox           #Now Hagrid container is connected to new network as a reular network machine. If there is no connection, you need promiscous mode
+    #go to host
+    sudo ip link set ens4 promisc on                                    #it is needed on all devicess and reboot is needed
+    sudo docker run -itd --rm --network Durmstrang --ip 10.202.0.31 --name Lucjus busybox        
+    sudo docker exec -it Hagrid sh
+    ping Lucjus                                                         #or IP, there should be a connection
+
+# MACVLAN 802.1q
+    sudo docker stop Hagrid Lucjus
+    sudo docker network rm  Durmstrang          #lets remove old MACVLAN 
+    sudo docker network create -d macvlan --subnet 10.202.20.0  --gateway 10.202.20.1 -o parent=ens4.20 macvlan20
+    sudo ipaddress show          #see new sub interface
+    #similiar with Lucjus
+
+# IPVLAN L2
+    sudo docker stop Hagrid Lucjus
+    sudo docker network create -d ipvlan --subnet 10.202.0.0 --gateway 10.202.0.1 -o parent=ens4 Durmstrang
+    sudo docker run -itd --rm --network Durmsrtang --ip 10.202.0.40 --name Hagrid busybox
+    sudo docker run -itd --rm --network Durmsrtang --ip 10.202.0.41 --name Lucjus busybox
+    sudo docker exec -it Hagrid sh
+    # Test conectivity to Lucjus and internet
+        exit
+    ip address show         #see, same MAC addresses
+
+# IPVLAN L3
+    sudo docker stop Hagrid Lucjus
+    sudo docker network rm Durmstrang
+    sudo docker network create -d ipvlan --subnet 192.168.90.0/24  -o parent=ens4 -o ipvlan_mode=l3 Durmstrang        # you dont specyfi gateway, it will be your parent interface we tied to
+    # if there would be more than one network, you need to specyfie them all at once:
+        #sudo docker network create -d ipvlan --subnet 192.168.90.0/24  -o parent=ens4 -o ipvlan_mode=l3 --subnet 192.168.95.0/24 Durmstrang  
+    sudo docker run -itd --rm --network Durmstrang ip-- 192.168.90.11 --name Hagrid busybox
+    sudo docker run -itd --rm --network Durmstrang ip-- 192.168.90.12 --name Hagrid busybox
+    sudo docker inspect Durmstrang          #see network addresses
+    # when you check connectivity from Hagrid, it can ping Lucjus, it could ping other similiar L3 Networks, but it will not ping Internet, there is no routing at this moment. It needs to be added
+    # So when two networks share the same network interface, they can ping each other
