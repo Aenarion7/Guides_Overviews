@@ -37,3 +37,45 @@ One VPC connected to on-prem trough HA-VPN.
 Alternative Approach: Using VPC Network Connectivity Center. See other Overview in this folder
 - If VPC Peering is not preferred, you can use VPC Network Connectivity Center to establish a hub-and-spoke model.
 - This allows multiple VPCs to connect via a central hub without requiring full VPC Peering.
+
+**Commands:**
+
+Step1
+
+      gcloud compute networks peerings create new-vpc-to-existing-vpc \
+      --network=new-vpc \
+      --peer-network=existing-vpc \
+      --export-custom-routes \
+      --import-custom-routes
+      gcloud compute networks peerings create existing-vpc-to-new-vpc \
+      --network=existing-vpc \
+      --peer-network=new-vpc \
+      --export-custom-routes \
+      --import-custom-routes
+
+Step 2
+
+      gcloud compute routers update existing-vpc-router \
+      --advertisement-mode=CUSTOM \
+      --set-advertisement-ranges=10.20.0.0/16
+
+      gcloud compute routes create new-vpc-to-onprem \
+      --network=new-vpc \
+      --destination-range=10.0.0.0/8 \
+      --next-hop-vpn-tunnel=existing-vpc-ha-vpn \
+      --priority=1000
+
+Step 3
+
+      gcloud compute firewall-rules create allow-new-vpc-traffic \
+      --network=new-vpc \
+      --allow tcp,udp,icmp \
+      --source-ranges=10.0.0.0/8
+
+      gcloud compute firewall-rules create allow-existing-vpc-traffic \
+      --network=existing-vpc \
+      --allow tcp,udp,icmp \
+      --source-ranges=10.20.0.0/16
+
+
+
