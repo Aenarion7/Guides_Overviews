@@ -15,10 +15,18 @@ Connecting is done in NCC by creating Hub and connecting spokes to it as a reaso
 
 5. **Cloud VPN** – An encrypted connection between a VPC and another VPC or on-premises network via IPSec tunnels.
 
+![image](https://github.com/user-attachments/assets/c2530ace-11e1-4ab7-acfa-3089db43ac82)
+
 6. **Cloud Interconnect** – A dedicated physical connection (Dedicated/Partner Interconnect) for high performance and low latency.
 
-7. **Hybrid Connectivity (Router-to-Router BGP)** – Enables dynamic routing between VPC networks and on-premises networks, often used with Cloud VPN or Interconnect.
+![image](https://github.com/user-attachments/assets/bd75e485-006e-4eb9-8b8d-706fd50c6f17)
 
-8. **Shared VPC** – A shared VPC network where multiple GCP projects use a single central VPC without requiring peering.
+
+8. **Hybrid Connectivity (Router-to-Router BGP)** – Enables dynamic routing between VPC networks and on-premises networks, often used with Cloud VPN or Interconnect.
+
+9. **Shared VPC** – A shared VPC network where multiple GCP projects use a single central VPC without requiring peering.
+
+   ![image](https://github.com/user-attachments/assets/3ab44c0b-3d73-4cb0-8f23-a3aa51a07083)
+
 
 
