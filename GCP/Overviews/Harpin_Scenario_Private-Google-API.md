@@ -34,6 +34,18 @@ By explicitly defining the next hop as the default internet gateway in GCP, we m
 
 By using private DNS and a custom IP route, we ensure that Google API traffic stays within Google Cloud, avoiding unnecessary on-prem routing.
 
+5. Lastly set default route to on prem for all traffic (API traffic route will be more precise so it will take precedence)
+   - and delete default internet gateway:
+    
+          gcloud compute routes create default-to-onprem \
+          --network=my-vpc \
+          --destination-range=0.0.0.0/0 \
+          --next-hop-vpn-tunnel=my-ha-vpn-tunnel \
+          --priority=100
+
+         gcloud compute routes delete default-internet-gateway
+
+
 **Final Effect:**
 
 API traffic stays private (within Google Cloud).
