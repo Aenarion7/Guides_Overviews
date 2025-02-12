@@ -14,9 +14,12 @@ GCP → DNS → Private Google API
 **Steps/Solution:**
 
 Normally, requests to Google APIs use *.googleapis.com, which resolves to public IP addresses by default.
+
 To keep the traffic inside Google Cloud's private network, we override the DNS resolution so that requests to *.googleapis.com resolve to restricted.googleapis.com.
 restricted.googleapis.com is mapped to private IP addresses within Google Cloud instead of public IPs.
+
 This ensures that API traffic never leaves the Google Cloud network and remains protected by VPC Service Controls.
+
 1. Create a private DNS zone in Cloud DNS.
 2. Add a CNAME record mapping *.googleapis.com → restricted.googleapis.com
 3. Add an A record pointing restricted.googleapis.com to Google’s private API IP range.
