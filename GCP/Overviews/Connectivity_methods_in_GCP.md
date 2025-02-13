@@ -26,9 +26,12 @@ Connecting is done in NCC by creating Hub and connecting spokes to it as a reaso
 
 9. **Shared VPC** – A shared VPC network where multiple GCP projects use a single central VPC without requiring peering.
 
+    ![image](https://github.com/user-attachments/assets/c5be2dcc-1c22-42bf-b844-038be48ee025)
+
+
    Shared VPC lets you export subnets from a Virtual Private Cloud (VPC) network in a host project to other service projects in the same organization
 
-10. **One VPC**
+11. **One VPC**
 
    ![image](https://github.com/user-attachments/assets/3ab44c0b-3d73-4cb0-8f23-a3aa51a07083)
 
